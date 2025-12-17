@@ -1,92 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Chat & Calc</title>
+    <title>Chat Mail</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #e5ddd5; }
-        #chat-box { height: 80vh; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; }
-        .msg { background: white; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; max-width: 80%; width: fit-content; }
-        .time { font-size: 10px; color: gray; display: block; margin-top: 4px; }
-        .input-area { height: 10vh; background: #f0f0f0; display: flex; align-items: center; padding: 0 10px; position: fixed; bottom: 0; width: 100%; }
-        input { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
-        button { margin-left: 10px; padding: 10px 15px; border: none; background: #075e54; color: white; border-radius: 50%; cursor: pointer; }
-        .calc-btn { background: #2196F3; border-radius: 5px; margin-right: 5px; }
+        /* 8) Dark Gradient Theme & 7) Shadow Box */
+        body { 
+            margin: 0; 
+            background: linear-gradient(135deg, #0b0e11 0%, #075e54 100%); 
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            height: 95vh;
+            background: #121b22;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Shadow Box */
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 2) Header with Name & 3) Hamburger Menu */
+        .header {
+            background: #202c33;
+            padding: 15px;
+            color: #e9edef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 { margin: 0; font-size: 18px; color: #00a884; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: #b1b3b5; }
+
+        /* Chat Area */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WhatsApp pattern */
+            background-blend-mode: overlay;
+        }
+        .msg { 
+            background: #202c33; 
+            color: #e9edef;
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            max-width: 80%; 
+            font-size: 14px;
+        }
+        .time { font-size: 10px; color: #8696a0; float: right; margin-left: 10px; margin-top: 5px; }
+
+        /* 5) Input Area with Form for Keyboard Enter */
+        .input-area {
+            background: #202c33;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        form { display: flex; width: 100%; gap: 10px; }
+        input { 
+            flex: 1; 
+            background: #2a3942; 
+            border: none; 
+            color: white; 
+            padding: 12px; 
+            border-radius: 25px; 
+            outline: none; 
+        }
+
+        /* 4) Footer Links */
+        .footer-links {
+            background: #121b22;
+            padding: 5px;
+            text-align: center;
+            font-size: 11px;
+        }
+        .footer-links a { color: #00a884; text-decoration: none; margin: 0 10px; }
+
+        button { 
+            background: #00a884; 
+            border: none; 
+            color: white; 
+            padding: 10px 15px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body>
 
+<div class="app-container">
+    <div class="header">
+        <div class="menu-icon">☰</div>
+        <h2>Chat Mail</h2>
+        <div style="width: 24px;"></div> </div>
+
     <div id="chat-box">
-        <div class="msg">Welcome! Type <b>/calc 5+5</b> to share a calculation.<span class="time">10:00 AM</span></div>
+        <div class="msg">
+            Setup complete! Calculation <b>2+2</b> likhkar try karein.
+            <span class="time">Now</span>
+        </div>
+    </div>
+
+    <div class="footer-links">
+        <a href="#">Privacy</a> | <a href="#">Terms</a> | <a href="#">Help</a>
     </div>
 
     <div class="input-area">
-        <button class="calc-btn" onclick="openCalc()">Calc</button>
-        <input type="text" id="msgInput" placeholder="Type a message or link...">
-        <button onclick="sendMessage()">Send</button>
+        <form id="chatForm">
+            <input type="text" id="msgInput" placeholder="Message or calculation..." autocomplete="off">
+            <button type="submit">➤</button>
+        </form>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<script>
+    const chatForm = document.getElementById('chatForm');
+    const msgInput = document.getElementById('msgInput');
+    const chatBox = document.getElementById('chat-box');
 
-        // TODO: Replace with YOUR Firebase Config
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Send Message Function
-        window.sendMessage = async () => {
-            const input = document.getElementById('msgInput');
-            let text = input.value;
-
-            if (text.trim() === "") return;
-
-            // Simple Calculator Logic (/calc check)
-            if (text.startsWith('/calc ')) {
-                try {
-                    const equation = text.replace('/calc ', '');
-                    const result = eval(equation); // Be careful with eval in production
-                    text = `🧮 Calculation: ${equation} = ${result}`;
-                } catch (e) {
-                    text = "Error in calculation!";
-                }
-            }
-
-            await addDoc(collection(db, "messages"), {
-                text: text,
-                createdAt: serverTimestamp(),
-                user: "User@email.com" // Yahan baad mein Auth lagayenge
-            });
-            input.value = "";
-        };
-
-        // Real-time listener to fetch messages
-        const q = query(collection(db, "messages"), orderBy("createdAt"));
-        onSnapshot(q, (snapshot) => {
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const date = data.createdAt?.toDate() ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
-                chatBox.innerHTML += `<div class="msg">${data.text}<span class="time">${date}</span></div>`;
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        window.openCalc = () => {
-            const val = prompt("Enter calculation (e.g. 10*5+2):");
-            if(val) document.getElementById('msgInput').value = `/calc ${val}`;
+    // 6) Smart Calculation Logic in Chat Box
+    function solveEquation(str) {
+        // Sirf numbers aur basic math (+-*/) allow karne ke liye
+        if (/^[0-9+\-*/().\s]+$/.test(str)) {
+            try {
+                return eval(str);
+            } catch { return null; }
         }
-    </script>
+        return null;
+    }
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let text = msgInput.value.trim();
+        if (!text) return;
+
+        const result = solveEquation(text);
+        if (result !== null) {
+            text = `🧮 ${text} = ${result}`;
+        }
+
+        addMessage(text);
+        msgInput.value = "";
+    });
+
+    function addMessage(txt) {
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const msgDiv = `<div class="msg">${txt}<span class="time">${time}</span></div>`;
+        chatBox.innerHTML += msgDiv;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+
 </body>
 </html>
+

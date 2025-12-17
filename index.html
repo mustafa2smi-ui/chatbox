@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Chat & Calc</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #e5ddd5; }
+        #chat-box { height: 80vh; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; }
+        .msg { background: white; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; max-width: 80%; width: fit-content; }
+        .time { font-size: 10px; color: gray; display: block; margin-top: 4px; }
+        .input-area { height: 10vh; background: #f0f0f0; display: flex; align-items: center; padding: 0 10px; position: fixed; bottom: 0; width: 100%; }
+        input { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
+        button { margin-left: 10px; padding: 10px 15px; border: none; background: #075e54; color: white; border-radius: 50%; cursor: pointer; }
+        .calc-btn { background: #2196F3; border-radius: 5px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="chat-box">
+        <div class="msg">Welcome! Type <b>/calc 5+5</b> to share a calculation.<span class="time">10:00 AM</span></div>
+    </div>
+
+    <div class="input-area">
+        <button class="calc-btn" onclick="openCalc()">Calc</button>
+        <input type="text" id="msgInput" placeholder="Type a message or link...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // TODO: Replace with YOUR Firebase Config
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Send Message Function
+        window.sendMessage = async () => {
+            const input = document.getElementById('msgInput');
+            let text = input.value;
+
+            if (text.trim() === "") return;
+
+            // Simple Calculator Logic (/calc check)
+            if (text.startsWith('/calc ')) {
+                try {
+                    const equation = text.replace('/calc ', '');
+                    const result = eval(equation); // Be careful with eval in production
+                    text = `🧮 Calculation: ${equation} = ${result}`;
+                } catch (e) {
+                    text = "Error in calculation!";
+                }
+            }
+
+            await addDoc(collection(db, "messages"), {
+                text: text,
+                createdAt: serverTimestamp(),
+                user: "User@email.com" // Yahan baad mein Auth lagayenge
+            });
+            input.value = "";
+        };
+
+        // Real-time listener to fetch messages
+        const q = query(collection(db, "messages"), orderBy("createdAt"));
+        onSnapshot(q, (snapshot) => {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const date = data.createdAt?.toDate() ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
+                chatBox.innerHTML += `<div class="msg">${data.text}<span class="time">${date}</span></div>`;
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        window.openCalc = () => {
+            const val = prompt("Enter calculation (e.g. 10*5+2):");
+            if(val) document.getElementById('msgInput').value = `/calc ${val}`;
+        }
+    </script>
+</body>
+</html>

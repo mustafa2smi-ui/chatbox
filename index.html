@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Mail | Store Edition</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; background: #000; height: 100vh; display: flex; justify-content: center; }
+        
+        .app-container {
+            width: 100%; max-width: 450px; height: 100vh;
+            background: #121b22; display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+        }
+
+        /* Header */
+        .header { background: #202c33; padding: 15px; color: #00a884; font-weight: bold; text-align: center; border-bottom: 1px solid #2a3942; }
+
+        /* Chat Area */
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background-color: #0b141a; }
+        .spacer { flex-grow: 1; }
+
+        /* Product Card Style */
+        .product-card {
+            background: #202c33; border-radius: 12px; overflow: hidden;
+            margin-bottom: 15px; width: 280px; align-self: flex-start;
+            border: 1px solid #2a3942; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .product-card img { width: 100%; height: 180px; object-fit: cover; }
+        .product-info { padding: 12px; color: white; }
+        .product-price { color: #00a884; font-size: 18px; font-weight: bold; margin: 5px 0; }
+        .order-btn {
+            background: #00a884; color: white; border: none; width: 100%;
+            padding: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .order-btn:hover { background: #008f6f; }
+
+        /* Smooth Order Form (Slide Up) */
+        #order-form-overlay {
+            position: absolute; bottom: -100%; left: 0; width: 100%; height: 80%;
+            background: #1c272e; border-top-radius: 20px; transition: 0.5s ease;
+            z-index: 100; padding: 20px; color: white; border-top: 3px solid #00a884;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        #order-form-overlay.active { bottom: 0; }
+        .form-input { background: #2a3942; border: 1px solid #3b4a54; color: white; padding: 10px; border-radius: 8px; width: 100%; }
+        .close-form { color: #ff4444; float: right; cursor: pointer; font-weight: bold; }
+
+        /* Input Area */
+        .input-area { background: #202c33; padding: 15px; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; background: #2a3942; border: none; color: white; padding: 12px; border-radius: 20px; outline: none; }
+        .send-btn { background: #00a884; border: none; color: white; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">STORE CHAT</div>
+    
+    <div id="chat-box">
+        <div class="spacer"></div>
+        <div class="product-card">
+            <img src="https://via.placeholder.com/300x200" alt="Product">
+            <div class="product-info">
+                <div>Special T-Shirt</div>
+                <div class="product-price">₹499</div>
+                <button class="order-btn" onclick="openOrderForm('Special T-Shirt', '₹499')">Order Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-form-overlay">
+        <span class="close-form" onclick="closeForm()">X Close</span>
+        <h3 id="form-title">Order Details</h3>
+        <input type="text" id="custName" class="form-input" placeholder="Aapka Naam">
+        <input type="number" id="custPhone" class="form-input" placeholder="Mobile Number">
+        <input type="number" id="custQty" class="form-input" placeholder="Quantity">
+        <textarea id="custAddr" class="form-input" placeholder="Pura Address (Village, District, State, Pincode)"></textarea>
+        <button class="order-btn" onclick="submitOrder()">Confirm Order</button>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="msgInput" placeholder="Type a message...">
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+</div>
+
+<script>
+    let selectedProduct = "";
+
+    function openOrderForm(name, price) {
+        selectedProduct = name;
+        document.getElementById('form-title').innerText = "Order: " + name;
+        document.getElementById('order-form-overlay').classList.add('active');
+    }
+
+    function closeForm() {
+        document.getElementById('order-form-overlay').classList.remove('active');
+    }
+
+    function submitOrder() {
+        const name = document.getElementById('custName').value;
+        const phone = document.getElementById('custPhone').value;
+        
+        if(!name || !phone) { alert("Please fill details"); return; }
+
+        // Success Message in Chat
+        const chatBox = document.getElementById('chat-box');
+        const orderMsg = document.createElement('div');
+        orderMsg.style.cssText = "background:#005c4b; color:white; padding:10px; border-radius:10px; margin-bottom:10px; align-self:flex-end;";
+        orderMsg.innerHTML = `✅ <b>Order Placed!</b><br>Product: ${selectedProduct}<br>Buyer: ${name}<br>Contact: ${phone}`;
+        
+        chatBox.appendChild(orderMsg);
+        closeForm();
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // Clear Form
+        document.getElementById('custName').value = "";
+        document.getElementById('custPhone').value = "";
+    }
+
+    function sendMsg() {
+        const input = document.getElementById('msgInput');
+        if(!input.value) return;
+        const msg = document.createElement('div');
+        msg.style.cssText = "background:#202c33; color:white; padding:10px; border-radius:10px; margin-bottom:10px; align-self:flex-end;";
+        msg.innerText = input.value;
+        document.getElementById('chat-box').appendChild(msg);
+        input.value = "";
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+    }
+</script>
+
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>My Shop</title>
+<title>My Online Store</title>
 
 <style>
 body{
@@ -16,16 +16,52 @@ header{
   color:#fff;
   padding:15px;
   text-align:center;
-  cursor:pointer;
 }
 
 h1{margin:0;font-size:22px;}
+
+.container{
+  width:95%;
+  max-width:1200px;
+  margin:auto;
+}
+
+#adminPanel{
+  background:#fff;
+  padding:20px;
+  margin:20px 0;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+#adminPanel h3{
+  margin-top:0;
+}
+
+input{
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+}
+
+button{
+  background:#007bff;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#0056b3;
+}
 
 #products{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:15px;
-  padding:20px;
+  margin-bottom:40px;
 }
 
 .card{
@@ -46,39 +82,22 @@ h1{margin:0;font-size:22px;}
 .price{
   color:green;
   font-weight:bold;
-}
-
-button{
-  background:#007bff;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:5px;
-  cursor:pointer;
-  margin-top:5px;
-}
-
-button:hover{background:#0056b3;}
-
-#adminPanel{
-  display:none;
-  background:white;
-  padding:20px;
-  margin:20px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.2);
-}
-
-input{
-  width:100%;
-  padding:8px;
   margin:5px 0;
 }
 
+.category{
+  font-size:12px;
+  background:#eee;
+  padding:3px 6px;
+  border-radius:4px;
+}
+
+/* ORDER MODAL */
 #orderModal{
   display:none;
   position:fixed;
-  top:0;left:0;
+  top:0;
+  left:0;
   width:100%;
   height:100%;
   background:rgba(0,0,0,0.5);
@@ -89,29 +108,33 @@ input{
   padding:20px;
   width:90%;
   max-width:400px;
-  margin:10% auto;
+  margin:8% auto;
   border-radius:8px;
 }
 </style>
 </head>
 <body>
 
-<header id="logo">
+<header>
   <h1>My Online Store</h1>
 </header>
+
+<div class="container">
 
 <!-- ADMIN PANEL -->
 <div id="adminPanel">
   <h3>Add Product</h3>
-  <input type="file" id="imageInput">
+  <input type="file" id="imageInput" required>
   <input type="text" id="name" placeholder="Product Name">
   <input type="number" id="price" placeholder="Price">
-  <input type="text" id="category" placeholder="Category">
+  <input type="text" id="category" placeholder="Category (cloth, toys...)">
   <button onclick="saveProduct()">Save Product</button>
 </div>
 
 <!-- PRODUCT LIST -->
 <div id="products"></div>
+
+</div>
 
 <!-- ORDER MODAL -->
 <div id="orderModal">
@@ -131,49 +154,18 @@ input{
 
 <script>
 const WEB_APP_URL = "YOUR_WEB_APP_URL";
-const ADMIN_PASSWORD = "YOUR_ADMIN_PASSWORD";
 
-let clickCount = 0;
 let selectedProduct = "";
 let selectedPrice = "";
-
-/* Hidden Admin Logic */
-document.addEventListener("DOMContentLoaded", function(){
-
-  const logo = document.getElementById("logo");
-  let clickCount = 0;
-  let timer = null;
-
-  logo.addEventListener("click", function(){
-
-    clickCount++;
-
-    // 2 second me 5 click hone chahiye
-    clearTimeout(timer);
-    timer = setTimeout(function(){
-      clickCount = 0;
-    },2000);
-
-    if(clickCount === 5){
-      let pass = prompt("Enter Admin Password");
-
-      if(pass === ADMIN_PASSWORD){
-        document.getElementById("adminPanel").style.display = "block";
-        alert("Admin Panel Opened");
-      } else {
-        alert("Wrong Password");
-      }
-
-      clickCount = 0;
-    }
-
-  });
-
-});
 
 /* SAVE PRODUCT */
 function saveProduct(){
   let file = document.getElementById("imageInput").files[0];
+  if(!file){
+    alert("Select Image First");
+    return;
+  }
+
   let reader = new FileReader();
 
   reader.onloadend = function(){
@@ -184,12 +176,12 @@ function saveProduct(){
       body:JSON.stringify({
         type:"product",
         image:base64,
-        name:name.value,
-        price:price.value,
-        category:category.value
+        name:document.getElementById("name").value,
+        price:document.getElementById("price").value,
+        category:document.getElementById("category").value
       })
     }).then(()=>{
-      alert("Product Saved");
+      alert("Product Saved Successfully");
       location.reload();
     });
   };
@@ -209,7 +201,7 @@ function loadProducts(){
         <img src="${p.image}">
         <h4>${p.name}</h4>
         <div class="price">₹${p.price}</div>
-        <small>${p.category}</small><br>
+        <div class="category">${p.category}</div>
         <button onclick="orderNow('${p.name}','${p.price}')">
         Order Now
         </button>
@@ -221,7 +213,7 @@ function loadProducts(){
 
 loadProducts();
 
-/* ORDER */
+/* ORDER SYSTEM */
 function orderNow(name,price){
   selectedProduct=name;
   selectedPrice=price;
@@ -239,13 +231,13 @@ function submitOrder(){
       type:"order",
       productName:selectedProduct,
       price:selectedPrice,
-      qty:qty.value,
-      customerName:custName.value,
-      phone:phone.value,
-      address:address.value,
-      pin:pin.value,
-      district:district.value,
-      state:state.value
+      qty:document.getElementById("qty").value,
+      customerName:document.getElementById("custName").value,
+      phone:document.getElementById("phone").value,
+      address:document.getElementById("address").value,
+      pin:document.getElementById("pin").value,
+      district:document.getElementById("district").value,
+      state:document.getElementById("state").value
     })
   }).then(()=>{
     alert("Order Submitted Successfully");

@@ -71,14 +71,21 @@ button:hover{
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
   text-align:center;
 }
-
+/*
 .card img{
   width:100%;
   height:180px;
   object-fit:cover;
   border-radius:6px;
 }
-
+*/
+  .card img{
+  width:100%;
+  height:auto;
+  max-height:250px;
+  object-fit:contain;
+  background:#fff;
+}
 .price{
   color:green;
   font-weight:bold;
@@ -153,7 +160,7 @@ button:hover{
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwqElP2qBzOeJuvAf84sjI6_C4iZbc2vJ5h245xOtNzHE7iSmOfQNF94XmLdv3sHh9A/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNynXY2x4_jX-KpFHbhpbjun7ReWTYMVPVYzzUspHXoDQj_8HgK7LmjHRZVxPkXZs6/exec";
 
 let selectedProduct = "";
 let selectedPrice = "";

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopyou Store 🏪</title>
+    <style>
+        :root { --primary: #075e54; --accent: #00a884; --bg: #0b0e11; --card-bg: #121b22; }
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background: var(--bg); color: white; padding-bottom: 50px; }
+        .header { background: var(--primary); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; cursor: pointer; }
+        #admin-panel { display: none; background: #1c272e; padding: 20px; border-bottom: 3px solid var(--accent); }
+        .form-input { background: #2a3942; border: 1px solid #3b4a54; color: white; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; outline: none; }
+        #product-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        @media (max-width: 450px) { #product-container { grid-template-columns: 1fr; } }
+        .card { background: var(--card-bg); border-radius: 15px; overflow: hidden; border: 1px solid #2a3942; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .info { padding: 12px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; }
+        .category-bar { display: flex; gap: 10px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
+        .cat-item { flex: 0 0 auto; padding: 8px 20px; border-radius: 50px; background: #1c272e; border: 1px solid #2a3942; font-size: 13px; }
+        .cat-item.active { background: var(--accent); border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div id="admin-panel">
+        <h3 style="color:var(--accent); margin:0 0 10px 0;">Admin: Quick Upload</h3>
+        <input type="file" id="imageFile" class="form-input" accept="image/*">
+        <input type="text" id="newPName" class="form-input" placeholder="Product Name">
+        <input type="number" id="newPrice" class="form-input" placeholder="Price (₹)">
+        <select id="newCat" class="form-input">
+            <option value="Cloth">Cloth</option>
+            <option value="Toys">Toys</option>
+            <option value="Gadgets">Gadgets</option>
+        </select>
+        <button id="uploadBtn" class="btn" onclick="handleUpload()">SAVE & PUBLISH</button>
+        <p onclick="closeAdmin()" style="text-align:center; color:red; margin-top:10px; cursor:pointer; font-size:14px;">Close Panel</p>
+    </div>
+
+    <div class="header" onclick="handleAdminClick()"><h1>Shopyou Store 🏪</h1></div>
+
+    <div class="category-bar">
+        <div class="cat-item active" onclick="filterData('All', this)">All</div>
+        <div class="cat-item" onclick="filterData('Cloth', this)">Cloth</div>
+        <div class="cat-item" onclick="filterData('Toys', this)">Toys</div>
+    </div>
+
+    <div id="product-container">Loading...</div>
+
+<script>
+    const SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+    let allProducts = [];
+    let headerClicks = 0;
+
+    // Admin Panel kholne ke liye logic
+    function handleAdminClick() {
+        headerClicks++;
+        if (headerClicks === 5) {
+            if (prompt("Password:") === "1234") document.getElementById('admin-panel').style.display = 'block';
+            headerClicks = 0;
+        }
+        setTimeout(() => { headerClicks = 0; }, 2000);
+    }
+
+    function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+
+    // --- YE HAI NAYA HANDLE UPLOAD CODE (REPLACE HUA HAI) ---
+    async function handleUpload() {
+        const fileInput = document.getElementById('imageFile');
+        const name = document.getElementById('newPName').value;
+        const price = document.getElementById('newPrice').value;
+        const cat = document.getElementById('newCat').value;
+
+        if (!fileInput.files[0] || !name || !price) {
+            alert("Kripya saari details bhariye aur photo chuniye!");
+            return;
+        }
+
+        const btn = document.getElementById('uploadBtn');
+        btn.innerText = "Uploading to Drive... ⏳";
+        btn.disabled = true;
+
+        // Image ko Base64 string mein badalna taaki Drive mein ja sake
+        const reader = new FileReader();
+        reader.onload = async function() {
+            const base64Data = reader.result;
+
+            const data = {
+                type: "ADD_PRODUCT",
+                imageData: base64Data,
+                productName: name,
+                price: price,
+                category: cat
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify(data) 
+                });
+                
+                if(response.ok) {
+                    alert("Mubarak ho! Product Google Drive aur Sheet dono mein save ho gaya.");
+                    location.reload();
+                } else {
+                    throw new Error("Upload failed");
+                }
+            } catch (err) {
+                alert("Error: Upload nahi ho paya. Permissions check karein.");
+                btn.innerText = "SAVE & PUBLISH";
+                btn.disabled = false;
+            }
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    // Baaki ke Functions (loadStore, showItems, etc.) wahi rahenge...
+    async function loadStore() {
+        const resp = await fetch(SCRIPT_URL);
+        allProducts = await resp.json();
+        showItems(allProducts);
+    }
+
+    function showItems(list) {
+        const container = document.getElementById('product-container');
+        container.innerHTML = "";
+        list.forEach(p => {
+            container.innerHTML += `<div class="card"><img src="${p[0]}"><div class="info"><b>${p[1]}</b><br><span style="color:#00a884">₹${p[2]}</span><button class="btn" style="margin-top:10px;">ORDER</button></div></div>`;
+        });
+    }
+
+    window.onload = loadStore;
+    </script>
+</body>
+</html>

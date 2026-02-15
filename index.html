@@ -192,22 +192,33 @@ function saveProduct(){
 /* LOAD PRODUCTS */
 function loadProducts(){
   fetch(WEB_APP_URL)
-  .then(res=>res.json())
+  .then(res => res.json())
   .then(data=>{
+    console.log("Received Data:", data); // debug
+
     let html="";
-    data.forEach(p=>{
-      html+=`
-      <div class="card">
-        <img src="${p.image}">
-        <h4>${p.name}</h4>
-        <div class="price">₹${p.price}</div>
-        <div class="category">${p.category}</div>
-        <button onclick="orderNow('${p.name}','${p.price}')">
-        Order Now
-        </button>
-      </div>`;
-    });
+
+    if(data.length === 0){
+      html = "<h3>No Products Available</h3>";
+    } else {
+      data.forEach(p=>{
+        html+=`
+        <div class="card">
+          <img src="${p.image}" alt="product">
+          <h4>${p.name}</h4>
+          <div class="price">₹${p.price}</div>
+          <div class="category">${p.category}</div>
+          <button onclick="orderNow('${p.name}','${p.price}')">
+          Order Now
+          </button>
+        </div>`;
+      });
+    }
+
     document.getElementById("products").innerHTML=html;
+  })
+  .catch(error=>{
+    console.error("Error loading products:", error);
   });
 }
 

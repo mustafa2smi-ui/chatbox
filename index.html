@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>My Shop</title>
+
+<style>
+body{
+  font-family: Arial;
+  margin:0;
+  background:#f4f4f4;
+}
+
+header{
+  background:#222;
+  color:#fff;
+  padding:15px;
+  text-align:center;
+  cursor:pointer;
+}
+
+h1{margin:0;font-size:22px;}
+
+#products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+  padding:20px;
+}
+
+.card{
+  background:#fff;
+  padding:10px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  text-align:center;
+}
+
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:6px;
+}
+
+.price{
+  color:green;
+  font-weight:bold;
+}
+
+button{
+  background:#007bff;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:5px;
+  cursor:pointer;
+  margin-top:5px;
+}
+
+button:hover{background:#0056b3;}
+
+#adminPanel{
+  display:none;
+  background:white;
+  padding:20px;
+  margin:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+input{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+}
+
+#orderModal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+}
+
+.modal-content{
+  background:#fff;
+  padding:20px;
+  width:90%;
+  max-width:400px;
+  margin:10% auto;
+  border-radius:8px;
+}
+</style>
+</head>
+<body>
+
+<header id="logo">
+  <h1>My Online Store</h1>
+</header>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <h3>Add Product</h3>
+  <input type="file" id="imageInput">
+  <input type="text" id="name" placeholder="Product Name">
+  <input type="number" id="price" placeholder="Price">
+  <input type="text" id="category" placeholder="Category">
+  <button onclick="saveProduct()">Save Product</button>
+</div>
+
+<!-- PRODUCT LIST -->
+<div id="products"></div>
+
+<!-- ORDER MODAL -->
+<div id="orderModal">
+  <div class="modal-content">
+    <h3>Order Details</h3>
+    <input type="text" id="custName" placeholder="Your Name">
+    <input type="text" id="phone" placeholder="Phone">
+    <input type="number" id="qty" placeholder="Quantity">
+    <input type="text" id="address" placeholder="Address">
+    <input type="text" id="pin" placeholder="Pin Code">
+    <input type="text" id="district" placeholder="District">
+    <input type="text" id="state" placeholder="State">
+    <button onclick="submitOrder()">Submit Order</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const WEB_APP_URL = "YOUR_WEB_APP_URL";
+const ADMIN_PASSWORD = "YOUR_ADMIN_PASSWORD";
+
+let clickCount = 0;
+let selectedProduct = "";
+let selectedPrice = "";
+
+/* Hidden Admin Logic */
+document.getElementById("logo").addEventListener("click", function(){
+  clickCount++;
+  if(clickCount >= 5){
+    let pass = prompt("Enter Admin Password");
+    if(pass === ADMIN_PASSWORD){
+      document.getElementById("adminPanel").style.display="block";
+      alert("Admin Panel Opened");
+    }else{
+      alert("Wrong Password");
+    }
+    clickCount = 0;
+  }
+});
+
+/* SAVE PRODUCT */
+function saveProduct(){
+  let file = document.getElementById("imageInput").files[0];
+  let reader = new FileReader();
+
+  reader.onloadend = function(){
+    let base64 = reader.result.split(",")[1];
+
+    fetch(WEB_APP_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        type:"product",
+        image:base64,
+        name:name.value,
+        price:price.value,
+        category:category.value
+      })
+    }).then(()=>{
+      alert("Product Saved");
+      location.reload();
+    });
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* LOAD PRODUCTS */
+function loadProducts(){
+  fetch(WEB_APP_URL)
+  .then(res=>res.json())
+  .then(data=>{
+    let html="";
+    data.forEach(p=>{
+      html+=`
+      <div class="card">
+        <img src="${p.image}">
+        <h4>${p.name}</h4>
+        <div class="price">₹${p.price}</div>
+        <small>${p.category}</small><br>
+        <button onclick="orderNow('${p.name}','${p.price}')">
+        Order Now
+        </button>
+      </div>`;
+    });
+    document.getElementById("products").innerHTML=html;
+  });
+}
+
+loadProducts();
+
+/* ORDER */
+function orderNow(name,price){
+  selectedProduct=name;
+  selectedPrice=price;
+  document.getElementById("orderModal").style.display="block";
+}
+
+function closeModal(){
+  document.getElementById("orderModal").style.display="none";
+}
+
+function submitOrder(){
+  fetch(WEB_APP_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      type:"order",
+      productName:selectedProduct,
+      price:selectedPrice,
+      qty:qty.value,
+      customerName:custName.value,
+      phone:phone.value,
+      address:address.value,
+      pin:pin.value,
+      district:district.value,
+      state:state.value
+    })
+  }).then(()=>{
+    alert("Order Submitted Successfully");
+    closeModal();
+  });
+}
+</script>
+
+</body>
+</html>

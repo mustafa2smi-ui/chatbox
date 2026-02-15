@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopyou Store 🏪</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background: #0b0e11; color: white; padding-bottom: 80px; }
+        
+        /* Header & Menu Style */
+        .header { 
+            background: #075e54; padding: 15px; 
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+        }
+        .header h1 { margin: 0; font-size: 20px; color: white; }
+        .menu-btn { font-size: 24px; cursor: pointer; color: white; }
+
+        /* Sidebar Menu */
+        #side-menu {
+            position: fixed; top: 0; left: -250px; width: 250px; height: 100%;
+            background: #1c272e; transition: 0.4s; z-index: 2000; padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+        }
+        #side-menu.active { left: 0; }
+        #side-menu a { display: block; color: white; text-decoration: none; padding: 15px 0; border-bottom: 1px solid #2a3942; }
+
+        /* Product Grid */
+        #product-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        @media (max-width: 450px) { #product-container { grid-template-columns: 1fr; } }
+
+        .card { background: #121b22; border-radius: 15px; overflow: hidden; border: 1px solid #2a3942; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .info { padding: 12px; }
+        .price { color: #00a884; font-size: 18px; font-weight: bold; }
+        .buy-btn { background: #00a884; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* Order Form */
+        #order-form {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%;
+            background: #1c272e; border-radius: 25px 25px 0 0; transition: 0.5s ease;
+            z-index: 3000; padding: 25px; border-top: 4px solid #00a884; overflow-y: auto;
+        }
+        #order-form.active { bottom: 0; }
+        .form-input { background: #2a3942; border: 1px solid #3b4a54; color: white; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; }
+        
+        /* Footer */
+        .footer { text-align: center; padding: 20px; background: #121b22; margin-top: 20px; }
+        .footer-links a { color: #00a884; text-decoration: none; font-size: 12px; margin: 0 10px; }
+        .made-by { font-size: 14px; margin-top: 10px; color: #8696a0; }
+    </style>
+</head>
+<body>
+
+    <div id="side-menu">
+        <span style="float:right; cursor:pointer;" onclick="toggleMenu()">✖</span>
+        <h3 style="color:#00a884;">Menu</h3>
+        <a href="#">About Us</a>
+        <a href="#">Contact Us</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+    </div>
+
+    <div class="header">
+        <div class="menu-btn" onclick="toggleMenu()">☰</div>
+        <h1>Shopyou Store 🏪</h1>
+        <div style="width:24px;"></div>
+    </div>
+
+    <div id="product-container">
+        <p style="text-align:center;">Loading products...</p>
+    </div>
+
+    <div id="order-form">
+        <span style="float:right; color:red; cursor:pointer;" onclick="closeForm()">✖ Close</span>
+        <h2 id="p-name" style="color:#00a884;">Product Name</h2>
+        
+        <input type="text" id="custName" class="form-input" placeholder="Aapka Naam">
+        
+        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp Number (10 digits)" maxlength="10">
+        
+        <input type="number" id="custQty" class="form-input" placeholder="Quantity" min="1" value="1">
+        
+        <textarea id="custAddr" class="form-input" rows="3" placeholder="Pura Address (Village, District, State, PIN)"></textarea>
+        
+        <button class="buy-btn" onclick="submitOrder()" style="padding:15px;">CONFIRM ORDER</button>
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Contact</a>
+            <a href="#">Help</a>
+        </div>
+        <div class="made-by">Made By ❤️</div>
+    </div>
+
+    <script>
+        let currentProduct = "";
+        const SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+
+        function toggleMenu() {
+            document.getElementById('side-menu').classList.toggle('active');
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const products = await response.json();
+                const container = document.getElementById('product-container');
+                container.innerHTML = "";
+                products.forEach(p => {
+                    container.innerHTML += `
+                        <div class="card">
+                            <img src="${p[0]}" alt="${p[1]}">
+                            <div class="info">
+                                <div style="font-weight:bold;">${p[1]}</div>
+                                <div class="price">₹${p[2]}</div>
+                                <button class="buy-btn" onclick="openForm('${p[1]}')">ORDER NOW</button>
+                            </div>
+                        </div>`;
+                });
+            } catch (e) { container.innerHTML = "Error loading products."; }
+        }
+
+        function openForm(name) {
+            currentProduct = name;
+            document.getElementById('p-name').innerText = name;
+            document.getElementById('order-form').classList.add('active');
+        }
+
+        function closeForm() {
+            document.getElementById('order-form').classList.remove('active');
+        }
+
+        async function submitOrder() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const qty = document.getElementById('custQty').value;
+            const address = document.getElementById('custAddr').value.trim();
+
+            // 1. Validation Logic
+            if (!name || !phone || !address) {
+                alert("Kripya saari jankari bharein!");
+                return;
+            }
+            if (phone.length !== 10 || isNaN(phone)) {
+                alert("WhatsApp number sahi se likhein (10 digits)!");
+                return;
+            }
+            if (qty < 1) {
+                alert("Quantity kam se kam 1 honi chahiye!");
+                return;
+            }
+
+            const data = { name, phone, qty, address, product: currentProduct };
+
+            // Send to Google Sheet
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            });
+
+            alert("✅ Shukriya! Aapka order 'Shopyou Store' ko mil gaya hai.");
+            closeForm();
+        }
+
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>

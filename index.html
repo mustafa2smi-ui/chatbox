@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopyou Store 🏪</title>
+    <style>
+        :root { --primary: #075e54; --accent: #00a884; --bg: #0b0e11; --card-bg: #121b22; }
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background: var(--bg); color: white; padding-bottom: 50px; }
+        
+        /* Header */
+        .header { background: var(--primary); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; cursor: pointer; }
+        .header h1 { margin: 0; font-size: 20px; }
+
+        /* Admin Panel Style */
+        #admin-panel { 
+            display: none; background: #1c272e; padding: 20px; 
+            border-bottom: 3px solid var(--accent); animation: slideDown 0.4s;
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        
+        .form-input { 
+            background: #2a3942; border: 1px solid #3b4a54; color: white; 
+            padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; outline: none; 
+        }
+
+        /* Common Button */
+        .btn { 
+            background: var(--accent); color: white; border: none; padding: 12px; 
+            border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; 
+        }
+
+        /* Category & Product Styles (Same as before) */
+        .category-bar { display: flex; gap: 10px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
+        .cat-item { flex: 0 0 auto; padding: 8px 20px; border-radius: 50px; background: #1c272e; border: 1px solid #2a3942; font-size: 13px; }
+        .cat-item.active { background: var(--accent); border-color: var(--accent); }
+
+        #product-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        @media (max-width: 450px) { #product-container { grid-template-columns: 1fr; } }
+        .card { background: var(--card-bg); border-radius: 15px; overflow: hidden; border: 1px solid #2a3942; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .info { padding: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="admin-panel">
+        <h3 style="margin-top:0; color:var(--accent);">Admin: Add Product</h3>
+        <input type="text" id="newImgLink" class="form-input" placeholder="Paste Image Link (ImgBB Direct Link)">
+        <input type="text" id="newPName" class="form-input" placeholder="Product Name">
+        <input type="number" id="newPrice" class="form-input" placeholder="Price (₹)">
+        <select id="newCat" class="form-input">
+            <option value="Cloth">Cloth</option>
+            <option value="Toys">Toys</option>
+            <option value="Gadgets">Gadgets</option>
+        </select>
+        <button class="btn" onclick="publishProduct()">SAVE & PUBLISH</button>
+        <p onclick="closeAdmin()" style="text-align:center; color:red; margin-top:10px; cursor:pointer;">Close Panel</p>
+    </div>
+
+    <div class="header" onclick="handleAdminClick()">
+        <h1>Shopyou Store 🏪</h1>
+    </div>
+
+    <div class="category-bar" id="catBar">
+        <div class="cat-item active" onclick="filterData('All', this)">All</div>
+        <div class="cat-item" onclick="filterData('Cloth', this)">Cloth</div>
+        <div class="cat-item" onclick="filterData('Toys', this)">Toys</div>
+    </div>
+
+    <div id="product-container">Loading...</div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyy2ng2n8gCfCMlu-jaQ1R9Rm84FFh-ww6e6Pj8Dc1GRl74jH-zHqTqKhexDrjD53YZ/exec";
+        let allProducts = [];
+        let headerClicks = 0;
+
+        // 1. Admin Logic (5 Clicks)
+        function handleAdminClick() {
+            headerClicks++;
+            if (headerClicks === 5) {
+                let pass = prompt("Enter Admin Password:");
+                if (pass === "1234") { // Apna password yahan badlein
+                    document.getElementById('admin-panel').style.display = 'block';
+                    window.scrollTo(0,0);
+                }
+                headerClicks = 0;
+            }
+            setTimeout(() => { headerClicks = 0; }, 3000); // 3 sec me 5 click chahiye
+        }
+
+        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+
+        // 2. Publish Logic
+        async function publishProduct() {
+            const data = {
+                type: "ADD_PRODUCT",
+                imageUrl: document.getElementById('newImgLink').value,
+                productName: document.getElementById('newPName').value,
+                price: document.getElementById('newPrice').value,
+                category: document.getElementById('newCat').value
+            };
+
+            if(!data.imageUrl || !data.productName) return alert("Details bhariye!");
+
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
+            alert("Product Live Ho Gaya!");
+            location.reload();
+        }
+
+        // 3. Load & Filter Logic
+        async function loadStore() {
+            const resp = await fetch(SCRIPT_URL);
+            allProducts = await resp.json();
+            showItems(allProducts);
+        }
+
+        function showItems(list) {
+            const container = document.getElementById('product-container');
+            container.innerHTML = "";
+            list.forEach(p => {
+                container.innerHTML += `
+                    <div class="card">
+                        <img src="${p[0]}" loading="lazy">
+                        <div class="info">
+                            <b>${p[1]}</b><br>
+                            <span style="color:#00a884">₹${p[2]}</span>
+                            <button class="btn" style="margin-top:10px; padding:8px;" onclick="alert('Order Feature Ready')">ORDER</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function filterData(cat, el) {
+            document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            if(cat === 'All') showItems(allProducts);
+            else showItems(allProducts.filter(p => p[3] === cat));
+        }
+
+        window.onload = loadStore;
+    </script>
+</body>
+</html>

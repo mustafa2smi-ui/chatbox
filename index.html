@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopyou Store 🏪</title>
+    <style>
+        :root {
+            --primary: #075e54;
+            --accent: #00a884;
+            --bg: #0b0e11;
+            --card-bg: #121b22;
+            --text: #e9edef;
+        }
+
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+        /* Header */
+        .header { 
+            background: var(--primary); padding: 15px; 
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+        }
+        .header h1 { margin: 0; font-size: 20px; color: white; }
+
+        /* Category Bar (Oval & Hover Animation) */
+        .category-section {
+            background: var(--bg); position: sticky; top: 55px; z-index: 999;
+            padding: 10px 0; border-bottom: 1px solid #2a3942;
+        }
+        .category-bar {
+            display: flex; gap: 10px; overflow-x: auto; padding: 5px 15px;
+            scrollbar-width: none;
+        }
+        .category-bar::-webkit-scrollbar { display: none; }
+        .cat-item {
+            flex: 0 0 auto; padding: 8px 20px; border-radius: 50px;
+            background: #1c272e; border: 1px solid #2a3942;
+            font-size: 13px; cursor: pointer; transition: 0.3s;
+        }
+        .cat-item:hover, .cat-item.active {
+            background: var(--accent); color: white; border-color: var(--accent);
+            transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,168,132,0.3);
+        }
+
+        /* Product Grid */
+        #product-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        @media (max-width: 450px) { #product-container { grid-template-columns: 1fr; } }
+
+        .card { 
+            background: var(--card-bg); border-radius: 15px; overflow: hidden; 
+            border: 1px solid #2a3942; transition: 0.3s;
+        }
+        .card img { width: 100%; height: 200px; object-fit: cover; background: #1c272e; }
+        .info { padding: 12px; }
+        .price { color: var(--accent); font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .buy-btn { 
+            background: var(--accent); color: white; border: none; width: 100%; 
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+
+        /* Slide-up Order Form */
+        #order-form {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%;
+            background: #1c272e; border-radius: 25px 25px 0 0; transition: 0.5s ease;
+            z-index: 2000; padding: 25px; border-top: 4px solid var(--accent); overflow-y: auto;
+        }
+        #order-form.active { bottom: 0; }
+        .form-input { 
+            background: #2a3942; border: 1px solid #3b4a54; color: white; 
+            padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; 
+        }
+
+        /* Footer */
+        .footer { text-align: center; padding: 30px 10px; background: var(--card-bg); margin-top: 20px; }
+        .footer-links a { color: var(--accent); text-decoration: none; font-size: 13px; margin: 0 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Shopyou Store 🏪</h1>
+    </div>
+
+    <div class="category-section">
+        <div class="category-bar">
+            <div class="cat-item active" onclick="filterProducts('All', this)">All</div>
+            <div class="cat-item" onclick="filterProducts('Cloth', this)">Cloth 👕</div>
+            <div class="cat-item" onclick="filterProducts('Toys', this)">Toys 🧸</div>
+            <div class="cat-item" onclick="filterProducts('Gadgets', this)">Gadgets ⚡</div>
+        </div>
+    </div>
+
+    <div id="product-container">
+        <p style="text-align:center; grid-column: 1/-1;">Loading awesome products...</p>
+    </div>
+
+    <div id="order-form">
+        <span style="float:right; color:#ff4444; font-weight:bold; cursor:pointer;" onclick="closeForm()">✖ Close</span>
+        <h2 id="p-name" style="color:var(--accent); margin-top:0;">Product Name</h2>
+        
+        <input type="text" id="custName" class="form-input" placeholder="Aapka Naam">
+        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp Number (10 digits)" maxlength="10">
+        <input type="number" id="custQty" class="form-input" placeholder="Quantity" min="1" value="1">
+        <textarea id="custAddr" class="form-input" rows="3" placeholder="Village, District, State, PIN Code"></textarea>
+        
+        <button class="buy-btn" onclick="submitOrder()" style="padding:15px; font-size:16px;">CONFIRM ORDER</button>
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a>
+        </div>
+        <p style="color:#8696a0; font-size:12px; margin-top:15px;">Made By ❤️</p>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+        let allProducts = [];
+        let currentProduct = "";
+
+        // WhatsApp Detail
+        const ADMIN_WA = "91XXXXXXXXXX"; // APNA 10 DIGIT NUMBER YAHAN DALO
+
+        // 1. Load Products from Google Sheet
+        async function fetchProducts() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                allProducts = await response.json();
+                renderUI(allProducts);
+            } catch (e) {
+                document.getElementById('product-container').innerHTML = "Error connecting to store.";
+            }
+        }
+
+        // 2. Render Products to UI
+        function renderUI(list) {
+            const container = document.getElementById('product-container');
+            container.innerHTML = "";
+            list.forEach(p => {
+                container.innerHTML += `
+                    <div class="card">
+                        <img src="${p[0]}" alt="${p[1]}" loading="lazy">
+                        <div class="info">
+                            <div style="font-weight:bold; font-size:15px;">${p[1]}</div>
+                            <div class="price">₹${p[2]}</div>
+                            <button class="buy-btn" onclick="openForm('${p[1]}')">ORDER NOW</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // 3. Filter by Category
+        function filterProducts(category, el) {
+            document.querySelectorAll('.cat-item').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+
+            if(category === 'All') {
+                renderUI(allProducts);
+            } else {
+                const filtered = allProducts.filter(p => p[3] === category);
+                renderUI(filtered);
+            }
+        }
+
+        // 4. Form Controls
+        function openForm(name) {
+            currentProduct = name;
+            document.getElementById('p-name').innerText = name;
+            document.getElementById('order-form').classList.add('active');
+        }
+
+        function closeForm() {
+            document.getElementById('order-form').classList.remove('active');
+        }
+
+        // 5. Submit Order & WhatsApp Notification
+        async function submitOrder() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const qty = document.getElementById('custQty').value;
+            const address = document.getElementById('custAddr').value.trim();
+
+            if(!name || phone.length !== 10 || qty < 1 || !address) {
+                alert("Kripya saari jankari sahi se bharein (10 digit mobile zaroori hai)!");
+                return;
+            }
+
+            const orderData = { name, phone, qty, address, product: currentProduct };
+
+            // Send to Google Sheet
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(orderData)
+            });
+
+            // WhatsApp Web Link
+            const waText = `*Naya Order Aaya Hai!*%0A--------------------------%0A*Product:* ${currentProduct}%0A*Qty:* ${qty}%0A*Customer:* ${name}%0A*Phone:* ${phone}%0A*Address:* ${address}`;
+            window.open(`https://wa.me/${ADMIN_WA}?text=${waText}`, '_blank');
+
+            alert("✅ Order Confirmed! Hum aapse jald sampark karenge.");
+            closeForm();
+        }
+
+        window.onload = fetchProducts;
+    </script>
+</body>
+</html>

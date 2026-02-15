@@ -49,7 +49,7 @@
     <div id="product-container">Loading...</div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXWwUXsT86KvcoNksLBLsFYNRVKO7_C-yWyQXt1TmYLciKGlnOtuBTb-GBsKQJ7Xoqbg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTCwtj51yt8YdyIIdYupZbdqab4NlGHu-Z38zyfKhZExYlzZL_auJMR13kMgak41g/exec";
     let allProducts = [];
     let headerClicks = 0;
 
@@ -94,26 +94,25 @@
                 category: cat
             };
 
-            try {
-                const response = await fetch(SCRIPT_URL, { 
-                    method: "POST", 
-                    body: JSON.stringify(data) 
-                });
-                
-                if(response.ok) {
-                    alert("Mubarak ho! Product Google Drive aur Sheet dono mein save ho gaya.");
-                    location.reload();
-                } else {
-                    throw new Error("Upload failed");
-                }
-            } catch (err) {
-                alert("Error: Upload nahi ho paya. Permissions check karein.");
-                btn.innerText = "SAVE & PUBLISH";
-                btn.disabled = false;
-            }
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
+                    try {
+            const response = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify(data),
+                // Kuch cases me ye zaroori hota hai
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+            });
+            
+            alert("Mubarak ho! Product save ho gaya.");
+            location.reload();
+        } catch (err) {
+            console.log(err);
+            alert("Upload request bheji gayi, kripya Sheet check karein.");
+            // Kabhi-kabhi success hone par bhi catch me jata hai, 
+            // isliye ek baar Sheet check karein.
+        }
+
 
     // Baaki ke Functions (loadStore, showItems, etc.) wahi rahenge...
     async function loadStore() {

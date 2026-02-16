@@ -341,7 +341,22 @@ window.onload = function() {
     } catch(e) { console.log("History load error"); }
 }
 */
-    
+    // Kisi bhi input ko safe banane ke liye ye function use karein
+function escapeHTML(str) {
+    return str.replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
+// Example usage while saving:
+// name: escapeHTML(document.getElementById("name").value)
+
 </script>
     <div class="share-float" onclick="shareStore()">
   <span style="font-size:20px;">🚀</span>

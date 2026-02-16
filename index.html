@@ -52,6 +52,7 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     </style>
 </head>
 <body>
+    <!--
 <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px;">
     <h1 style="color:var(--accent);">Shopyou Store 🏪</h1>
     <p style="color:#8696a0; text-align:center;">Behtar experience ke liye apni details bharein</p>
@@ -59,7 +60,7 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     <input type="email" id="startEmail" class="form-input" placeholder="Email ID">
     <button class="btn" onclick="saveUserSession()">ENTER STORE</button>
 </div>
-
+-->
 <div id="mySidebar" class="sidebar">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
   <a href="index.html">🏠 Home</a>
@@ -182,8 +183,51 @@ function submitOrder(){
         closeModal();
     });
 }
+function checkUserSession() {
+    const savedEmail = localStorage.getItem("userEmail");
+    if (savedEmail) {
+        document.getElementById("loginOverlay").style.display = "none";
+        loadUserHistory(savedEmail); // Purane orders auto-load honge
+    }
+}
 
-loadProducts();
+function saveUserSession() {
+    let name = document.getElementById("startName").value;
+    let email = document.getElementById("startEmail").value;
+    
+    if(!name || !email) return alert("Kripya details bharein");
+    
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userEmail", email);
+    
+    document.getElementById("loginOverlay").style.display = "none";
+    location.reload(); // Refresh to start session
+}
+
+window.onload = function() {
+    checkUserSession();
+    loadProducts(); // Purana product loading function
+}
+    async function loadUserHistory(email) {
+    try {
+        const resp = await fetch(WEB_APP_URL + "?type=history&email=" + email);
+        const orders = await resp.json();
+        
+        if(orders.length > 0) {
+            let historyHTML = `<h3 style="padding:15px; color:var(--accent);">Aapke Purane Orders:</h3>`;
+            orders.slice(0, 3).forEach(h => { // Sirf top 3 orders dikhayenge
+                historyHTML += `
+                <div class="history-card" style="margin: 0 15px 10px 15px;">
+                    <h4>${h.productName}</h4>
+                    <p>Status: <span style="color:var(--accent)">Confirmed</span> | Date: ${h.date}</p>
+                </div>`;
+            });
+            // Ise Products div ke upar insert kar dein
+            document.getElementById("products").insertAdjacentHTML('beforebegin', historyHTML);
+        }
+    } catch(e) { console.log("History load error"); }
+}
+
 </script>
     <div class="share-float" onclick="shareStore()">
   <span style="font-size:20px;">🚀</span>

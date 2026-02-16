@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+    <meta name="description" content="Shopyou Store - Best products at amazing prices.">
+<meta property="og:title" content="Shopyou Store 🏪">
+<meta property="og:description" content="Aapka welcome hai hamare new online store Shopyou me! Abhi visit kare zabardast products and offers ke liye.">
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3081/3081559.png"> ```
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopyou Store 🏪</title>
@@ -21,9 +26,42 @@
         #orderModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 2000; }
         .modal-content { background:#1c272e; padding:20px; width:90%; max-width:400px; margin:20% auto; border-radius:15px; border-top: 4px solid var(--accent); }
         .form-input { background: #2a3942; border: 1px solid #3b4a54; color: white; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; outline: none; }
+    /* Hamburg Menu & Sidebar */
+.menu-btn { font-size: 24px; cursor: pointer; color: white; position: absolute; left: 15px; top: 15px; }
+.sidebar {
+    height: 100%; width: 0; position: fixed; z-index: 3000; top: 0; left: 0;
+    background-color: #121b22; overflow-x: hidden; transition: 0.5s; padding-top: 60px;
+}
+.sidebar a { padding: 10px 25px; text-decoration: none; font-size: 18px; color: #8696a0; display: block; transition: 0.3s; }
+.sidebar a:hover { color: var(--accent); }
+.sidebar .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; margin-left: 50px; }
+
+/* Footer */
+footer { background: #121b22; padding: 30px 15px; text-align: center; border-top: 1px solid #2a3942; margin-top: 40px; }
+.footer-text { color: #8696a0; font-size: 14px; margin-bottom: 15px; }
+.footer-links a { color: var(--accent); text-decoration: none; margin: 0 10px; font-size: 13px; }
+
+/* Share Button Floating */
+.share-float {
+    position: fixed; bottom: 70px; right: 20px; background: var(--accent);
+    color: white; width: 50px; height: 50px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000;
+}
+
     </style>
 </head>
 <body>
+
+<div id="mySidebar" class="sidebar">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <a href="index.html">🏠 Home</a>
+  <a href="#" onclick="alert('Coming Soon')">📦 My Orders</a>
+  <a href="admin.html">🔐 Admin Login</a>
+  <a href="https://wa.me/91XXXXXXXXXX">💬 Contact Us</a>
+</div>
+
+<div class="menu-btn" onclick="openNav()">&#9776;</div>
 
 <header>
   <h1>Shopyou Store 🏪</h1>
@@ -85,6 +123,26 @@ function orderNow(name, price){
     document.getElementById("orderModal").style.display="block";
 }
 function closeModal(){ document.getElementById("orderModal").style.display="none"; }
+// Sidebar Functions
+function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
+function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+
+// Share Function
+function shareStore() {
+    const shareData = {
+        title: 'Shopyou Store 🏪',
+        text: 'Aapkaa welcome hai hamare new online store Shopyou me! Abhi visit kare zabardast products and offer ke liye.',
+        url: window.location.href
+    };
+
+    if (navigator.share) {
+        navigator.share(shareData).catch(err => console.log(err));
+    } else {
+        // Fallback for browsers that don't support native share
+        const waUrl = `https://wa.me/?text=Aapkaa welcome hai hamare new online store Shopyou me! Visit kare: ${window.location.href}`;
+        window.open(waUrl, '_blank');
+    }
+}
 
 function submitOrder(){
     let cName = document.getElementById("custName").value;
@@ -112,5 +170,18 @@ function submitOrder(){
 
 loadProducts();
 </script>
+    <div class="share-float" onclick="shareStore()">
+  <span style="font-size:20px;">🚀</span>
+</div>
+
+<footer>
+  <div class="footer-text">© 2026 Shopyou Store. Made with ❤️ for you.</div>
+  <div class="footer-links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms & Conditions</a>
+    <a href="https://wa.me/91XXXXXXXXXX">Help Support</a>
+  </div>
+</footer>
+
 </body>
 </html>

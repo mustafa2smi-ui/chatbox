@@ -67,6 +67,8 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
   <a href="#" onclick="alert('Coming Soon')">📦 My Orders</a>
   <a href="admin.html">🔐 Admin Login</a>
   <a href="https://wa.me/91XXXXXXXXXX">💬 Contact Us</a>
+<a href="javascript:void(0)" id="historyLink" style="display:none;" onclick="openHistoryModal()">📦 My Orders</a>
+
 </div>
 
 <div class="menu-btn" onclick="openNav()">&#9776;</div>
@@ -91,7 +93,7 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
 </div>
 
 <div id="products">Loading store...</div>
-
+<!--
 <div id="orderModal">
   <div class="modal-content">
     <h3 id="selNameText">Order Details</h3>
@@ -102,7 +104,31 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     <button class="btn" onclick="closeModal()" style="background:#444; margin-top:5px;">Cancel</button>
   </div>
 </div>
+-->
+    <div id="orderModal">
+    <div class="modal-content">
+    <h3 id="selNameText" style="color:var(--accent); text-align:center;">Order Details</h3>
+    
+    <input type="text" id="custName" class="form-input" placeholder="Apna Poora Naam">
+    <input type="tel" id="phone" class="form-input" placeholder="WhatsApp Number">
+    <input type="email" id="custEmail" class="form-input" placeholder="Email ID (History ke liye)">
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <input type="text" id="city" class="form-input" placeholder="City/Village">
+        <input type="text" id="pincode" class="form-input" placeholder="Pincode">
+    </div>
+    
+    <input type="text" id="landmark" class="form-input" placeholder="Landmark (Optional)">
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <input type="text" id="district" class="form-input" placeholder="District">
+        <input type="text" id="state" class="form-input" placeholder="State">
+    </div>
 
+    <button class="btn" onclick="submitOrder()">PLACE ORDER NOW</button>
+    <button class="btn" onclick="closeModal()" style="background:#444; margin-top:5px;">CANCEL</button>
+</div>
+</div>
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXHfvpiCrOFV7K_0sVIAKNxSmfOaqJPSVBddqj98fj0HVl1HvL96JS0Bz89rnDxF9Ngw/exec";
 let allData = [];
@@ -159,7 +185,7 @@ function shareStore() {
         window.open(waUrl, '_blank');
     }
 }
-
+/*
 function submitOrder(){
     let cName = document.getElementById("custName").value;
     let cPhone = document.getElementById("phone").value;
@@ -183,6 +209,61 @@ function submitOrder(){
         closeModal();
     });
 }
+    */
+    function submitOrder() {
+    // Basic Details
+    let name = document.getElementById("custName").value;
+    let phone = document.getElementById("phone").value;
+    let email = document.getElementById("custEmail").value;
+    
+    // Address Details
+    let city = document.getElementById("city").value;
+    let landmark = document.getElementById("landmark").value;
+    let pin = document.getElementById("pincode").value;
+    let dist = document.getElementById("district").value;
+    let state = document.getElementById("state").value;
+
+    if(!name || !phone || !email || !city || !pin) return alert("Kripya zaroori details bharein!");
+
+    // Email ko browser me save karna (Remember me feature)
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("userPhone", phone);
+
+    // Poora Address ek string mein
+    let fullAddress = `Village/City: ${city}, Landmark: ${landmark}, Pin: ${pin}, Dist: ${dist}, State: ${state}`;
+
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            type: "order",
+            productName: selName,
+            price: selPrice,
+            qty: 1,
+            customerName: name,
+            phone: phone,
+            email: email,
+            address: fullAddress
+        })
+    }).then(() => {
+        alert("Shukriya! Aapka order mil gaya hai. ✅");
+        closeModal();
+    });
+}
+
+// Jab modal khule, agar pehle se email save hai toh auto-fill kar dena
+function orderNow(name, price) {
+    selName = name; selPrice = price;
+    document.getElementById("selNameText").innerText = name;
+    document.getElementById("orderModal").style.display = "block";
+    
+    // Auto-fill feature
+    if(localStorage.getItem("userEmail")) {
+        document.getElementById("custEmail").value = localStorage.getItem("userEmail");
+        document.getElementById("phone").value = localStorage.getItem("userPhone");
+    }
+}
+
+    /*
 function checkUserSession() {
     const savedEmail = localStorage.getItem("userEmail");
     if (savedEmail) {
@@ -208,6 +289,38 @@ window.onload = function() {
     checkUserSession();
     loadProducts(); // Purana product loading function
 }
+    */
+    function checkIdentity() {
+    const savedEmail = localStorage.getItem("userEmail");
+    if (savedEmail) {
+        // Agar email mil gaya, toh "My Orders" dikhao
+        document.id("historyLink").style.display = "block";
+    }
+}
+
+// Jab user order submit karega
+function submitOrder() {
+    let email = document.getElementById("custEmail").value;
+    let phone = document.getElementById("phone").value;
+
+    // Browser ki memory mein save karein
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("userPhone", phone);
+
+    // Fetch call ke baad button ko turant enable karein
+    fetch(WEB_APP_URL, { ... }).then(() => {
+        alert("Order Successful!");
+        checkIdentity(); // Link ko enable karne ke liye
+        closeModal();
+    });
+}
+
+window.onload = function() {
+    loadProducts();
+    checkIdentity(); // Check if user has ordered before
+}
+
+    /*
     async function loadUserHistory(email) {
     try {
         const resp = await fetch(WEB_APP_URL + "?type=history&email=" + email);
@@ -227,7 +340,8 @@ window.onload = function() {
         }
     } catch(e) { console.log("History load error"); }
 }
-
+*/
+    
 </script>
     <div class="share-float" onclick="shareStore()">
   <span style="font-size:20px;">🚀</span>

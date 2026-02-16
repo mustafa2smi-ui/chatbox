@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopyou Store 🏪</title>
+    <style>
+        :root { --primary: #075e54; --accent: #00a884; --bg: #0b0e11; --card-bg: #121b22; }
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { margin: 0; background: var(--bg); color: white; padding-bottom: 50px; }
+        .header { background: var(--primary); padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        #products { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        @media (max-width: 450px) { #products { grid-template-columns: 1fr; } }
+        .card { background: var(--card-bg); border-radius: 15px; overflow: hidden; border: 1px solid #2a3942; text-align: center; padding-bottom: 15px; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .price { color: var(--accent); font-weight: bold; font-size: 18px; margin: 5px 0; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; width: 90%; cursor: pointer; font-weight: bold; }
+        .category-bar { display: flex; gap: 10px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
+        .cat-item { flex: 0 0 auto; padding: 8px 18px; border-radius: 50px; background: #1c272e; border: 1px solid #2a3942; font-size: 13px; cursor: pointer; }
+        .cat-item.active { background: var(--accent); }
+        #orderModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 2000; }
+        .modal-content { background:#1c272e; padding:20px; width:90%; max-width:400px; margin:20% auto; border-radius:15px; border-top: 4px solid var(--accent); }
+        .form-input { background: #2a3942; border: 1px solid #3b4a54; color: white; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 10px; outline: none; }
+    </style>
+</head>
+<body>
+
+<header>
+  <h1>Shopyou Store 🏪</h1>
+</header>
+
+<div class="category-bar">
+    <div class="cat-item active" onclick="filterCat('All', this)">All</div>
+    <div class="cat-item" onclick="filterCat('Cloth', this)">Cloth 👕</div>
+    <div class="cat-item" onclick="filterCat('Toy', this)">Toys 🧸</div>
+    <div class="cat-item" onclick="filterCat('Gadget', this)">Gadgets ⚡</div>
+</div>
+
+<div id="products">Loading store...</div>
+
+<div id="orderModal">
+  <div class="modal-content">
+    <h3 id="selNameText">Order Details</h3>
+    <input type="text" id="custName" class="form-input" placeholder="Your Name">
+    <input type="tel" id="phone" class="form-input" placeholder="WhatsApp Number">
+    <textarea id="address" class="form-input" placeholder="Address (Village, District, Pin)"></textarea>
+    <button class="btn" onclick="submitOrder()">Confirm Order</button>
+    <button class="btn" onclick="closeModal()" style="background:#444; margin-top:5px;">Cancel</button>
+  </div>
+</div>
+
+<script>
+const WEB_APP_URL = "APNA_DEPLOY_URL_YAHAN_DALO";
+let allData = [];
+let selName = "", selPrice = "";
+
+function loadProducts(){
+  fetch(WEB_APP_URL).then(res => res.json()).then(data => {
+    allData = data;
+    renderUI(data);
+  });
+}
+
+function renderUI(data){
+    let html = data.map(p => `
+        <div class="card">
+            <img src="${p.image}">
+            <h4 style="margin:10px 0 0 0;">${p.name}</h4>
+            <div class="price">₹${p.price}</div>
+            <button class="btn" onclick="orderNow('${p.name}','${p.price}')">ORDER NOW</button>
+        </div>
+    `).join('');
+    document.getElementById("products").innerHTML = html || "<h3>No Items Found</h3>";
+}
+
+function filterCat(cat, el){
+    document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    renderUI(cat === 'All' ? allData : allData.filter(p => p.category === cat));
+}
+
+function orderNow(name, price){
+    selName = name; selPrice = price;
+    document.getElementById("selNameText").innerText = name;
+    document.getElementById("orderModal").style.display="block";
+}
+function closeModal(){ document.getElementById("orderModal").style.display="none"; }
+
+function submitOrder(){
+    let cName = document.getElementById("custName").value;
+    let cPhone = document.getElementById("phone").value;
+    let cAddr = document.getElementById("address").value;
+
+    if(!cName || !cPhone || !cAddr) return alert("Puri details bharein!");
+
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            type: "order",
+            productName: selName,
+            price: selPrice,
+            qty: 1,
+            customerName: cName,
+            phone: cPhone,
+            address: cAddr
+        })
+    }).then(() => {
+        alert("Order Successful! ✅");
+        closeModal();
+    });
+}
+
+loadProducts();
+</script>
+</body>
+</html>

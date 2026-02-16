@@ -4,7 +4,7 @@
     <meta name="description" content="Shopyou Store - Best products at amazing prices.">
 <meta property="og:title" content="Shopyou Store 🏪">
 <meta property="og:description" content="Aapka welcome hai hamare new online store Shopyou me! Abhi visit kare zabardast products and offers ke liye.">
-<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3081/3081559.png"> ```
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3081/3081559.png">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,6 +52,13 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     </style>
 </head>
 <body>
+<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:5000; display:flex; justify-content:center; align-items:center; flex-direction:column; padding:20px;">
+    <h1 style="color:var(--accent);">Shopyou Store 🏪</h1>
+    <p style="color:#8696a0; text-align:center;">Behtar experience ke liye apni details bharein</p>
+    <input type="text" id="startName" class="form-input" placeholder="Apna Naam">
+    <input type="email" id="startEmail" class="form-input" placeholder="Email ID">
+    <button class="btn" onclick="saveUserSession()">ENTER STORE</button>
+</div>
 
 <div id="mySidebar" class="sidebar">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -72,6 +79,14 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     <div class="cat-item" onclick="filterCat('Cloth', this)">Cloth 👕</div>
     <div class="cat-item" onclick="filterCat('Toy', this)">Toys 🧸</div>
     <div class="cat-item" onclick="filterCat('Gadget', this)">Gadgets ⚡</div>
+</div>
+<div id="featured-products">
+    <div class="card">
+        <img src="https://raw.githubusercontent.com/username/repo/main/img1.jpg">
+        <h4>Exclusive Item 1</h4>
+        <div class="price">₹500</div>
+        <button class="btn" onclick="orderNow('Exclusive Item 1','500')">ORDER NOW</button>
+    </div>
 </div>
 
 <div id="products">Loading store...</div>

@@ -129,6 +129,15 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     <button class="btn" onclick="closeModal()" style="background:#444; margin-top:5px;">CANCEL</button>
 </div>
 </div>
+    <div id="historyModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000;">
+    <div class="modal-content" style="max-height:80vh; overflow-y:auto;">
+        <h3 style="color:var(--accent); text-align:center;">Aapke Orders 📦</h3>
+        <div id="historyList">
+            </div>
+        <button class="btn" onclick="closeHistory()" style="background:#444; margin-top:20px;">CLOSE</button>
+    </div>
+</div>
+
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi53A23bVMYTVWxlR3pQ_DroUbJs03tgc7fuX0OdpExuC01dQe2oMnF2s09tkQ1IxsSA/exec";
 let allData = [];
@@ -350,6 +359,39 @@ window.onload = function() {
     } catch(e) { console.log("History load error"); }
 }
 */
+    async function openHistoryModal() {
+    document.getElementById("historyModal").style.display = "block";
+    const email = localStorage.getItem("userEmail");
+    const listDiv = document.getElementById("historyList");
+    
+    listDiv.innerHTML = "<p>Orders dhund rahe hain... 🔍</p>";
+
+    try {
+        const resp = await fetch(WEB_APP_URL + "?type=history&email=" + email);
+        const orders = await resp.json();
+
+        if (orders.length === 0) {
+            listDiv.innerHTML = "<p>Abhi tak koi order nahi mila.</p>";
+            return;
+        }
+
+        let html = orders.map(h => `
+            <div style="background:#2a3942; padding:10px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--accent);">
+                <h4 style="margin:0;">${h.productName}</h4>
+                <p style="font-size:12px; color:#8696a0; margin:5px 0;">Date: ${h.date}</p>
+                <p style="font-weight:bold; color:var(--accent);">Price: ₹${h.price}</p>
+            </div>
+        `).join('');
+        listDiv.innerHTML = html;
+    } catch (e) {
+        listDiv.innerHTML = "<p>Error: Data load nahi ho paya.</p>";
+    }
+}
+
+function closeHistory() {
+    document.getElementById("historyModal").style.display = "none";
+}
+
     // Kisi bhi input ko safe banane ke liye ye function use karein
 function escapeHTML(str) {
     return str.replace(/[&<>"']/g, function(m) {

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Shopyou</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #0b0e11; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .admin-box { background: #121b22; padding: 30px; border-radius: 15px; border-top: 5px solid #00a884; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #00a884; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #2a3942; background: #2a3942; color: white; outline: none; }
+        .btn { width: 100%; padding: 12px; background: #00a884; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #008f6f; }
+        #formContent { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="admin-box" id="loginBox">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPass" placeholder="Enter Password">
+    <button class="btn" onclick="checkPass()">Login</button>
+</div>
+
+<div class="admin-box" id="formContent">
+    <h2>Add New Product</h2>
+    <input type="file" id="imageInput" accept="image/*">
+    <input type="text" id="name" placeholder="Product Name">
+    <input type="number" id="price" placeholder="Price (₹)">
+    <select id="categoryInput">
+        <option value="Cloth">Cloth 👕</option>
+        <option value="Toy">Toys 🧸</option>
+        <option value="Gadget">Gadgets ⚡</option>
+    </select>
+    <button class="btn" id="saveBtn" onclick="saveProduct()">SAVE & PUBLISH</button>
+</div>
+
+<script>
+const WEB_APP_URL = "APNA_DEPLOY_URL_YAHAN_DALO";
+
+function checkPass() {
+    let pass = document.getElementById("adminPass").value;
+    if(pass === "1234") { // Apna password yahan set karein
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("formContent").style.display = "block";
+    } else {
+        alert("Wrong Password!");
+    }
+}
+
+function saveProduct(){
+    let file = document.getElementById("imageInput").files[0];
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+    let cat = document.getElementById("categoryInput").value;
+
+    if(!file || !name || !price) return alert("Please fill everything!");
+
+    let btn = document.getElementById("saveBtn");
+    btn.innerText = "Uploading... ⏳";
+    btn.disabled = true;
+
+    let reader = new FileReader();
+    reader.onloadend = function(){
+        let base64 = reader.result.split(",")[1];
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                type: "product",
+                image: base64,
+                name: name,
+                price: price,
+                category: cat
+            })
+        }).then(res => res.text()).then(data => {
+            alert("Product Live Ho Gaya!");
+            location.reload();
+        }).catch(err => {
+            alert("Error: " + err);
+            btn.disabled = false;
+            btn.innerText = "SAVE & PUBLISH";
+        });
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>

@@ -48,6 +48,23 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     display: flex; justify-content: center; align-items: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000;
 }
+.image-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+}
+.image-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.image-container img {
+    flex: 0 0 100%; /* Ek baar mein ek photo dikhegi */
+    scroll-snap-align: start;
+    height: 250px;
+    object-fit: contain;
+    background: #000;
+}
+.scroll-dots { display: flex; justify-content: center; gap: 5px; margin-top: 5px; }
+.dot { width: 6px; height: 6px; background: #444; border-radius: 50%; }
 
     </style>
 </head>
@@ -149,7 +166,7 @@ function loadProducts(){
     renderUI(data);
   });
 }
-
+/*
 function renderUI(data){
     let html = data.map(p => `
         <div class="card">
@@ -160,6 +177,29 @@ function renderUI(data){
         </div>
     `).join('');
     document.getElementById("products").innerHTML = html || "<h3>No Items Found</h3>";
+}
+*/
+    function renderUI(data) {
+    let html = data.map(p => {
+        // Sirf wahi images dikhayenge jo empty nahi hain
+        let imagesHTML = `<img src="${p.image}">`;
+        if(p.image2) imagesHTML += `<img src="${p.image2}">`;
+        if(p.image3) imagesHTML += `<img src="${p.image3}">`;
+
+        return `
+        <div class="card">
+            <div class="image-container">
+                ${imagesHTML}
+            </div>
+            <div class="scroll-dots">
+                <div class="dot"></div>${p.image2 ? '<div class="dot"></div>' : ''}${p.image3 ? '<div class="dot"></div>' : ''}
+            </div>
+            <h4>${p.name}</h4>
+            <div class="price">₹${p.price}</div>
+            <button class="btn" onclick="orderNow('${p.name}','${p.price}')">ORDER NOW</button>
+        </div>`;
+    }).join('');
+    document.getElementById("products").innerHTML = html;
 }
 
 function filterCat(cat, el){

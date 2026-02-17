@@ -28,6 +28,13 @@
     <input type="file" id="imageInput2" accept="image/*">
     <input type="file" id="imageInput3" accept="image/*">
     <input type="text" id="name" placeholder="Product Name">
+    <textarea id="descInput" 
+          maxlength="250" 
+          rows="4" 
+          placeholder="Product Description (Max 100 words)..."
+          style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #2a3942; background: #2a3942; color: white; outline: none; resize: none; font-family: inherit;">
+    </textarea>
+    
     <input type="number" id="price" placeholder="Price (₹)">
     <select id="categoryInput">
         <option value="Cloth">Cloth 👕</option>
@@ -117,12 +124,17 @@ const toBase64 = file => new Promise((resolve, reject) => {
 });
 */
   async function saveProduct() {
+      const maxSize = 500 * 1024; // 500KB
+if (file1.size > maxSize || (file2 && file2.size > maxSize) || (file3 && file3.size > maxSize)) {
+    return alert("Ek ya zyada images 500KB se badi hain. Kripya compress karein!");
+}
+
     let file1 = document.getElementById("imageInput1").files[0];
     let file2 = document.getElementById("imageInput2").files[0];
     let file3 = document.getElementById("imageInput3").files[0];
     let name = document.getElementById("name").value;
     let price = document.getElementById("price").value;
-
+let description = document.getElementById("descInput").value;
     if(!file1 || !name || !price) return alert("Kam se kam Name, Price aur Pehli Image zaroori hai!");
 
     let btn = document.getElementById("saveBtn");

@@ -123,6 +123,7 @@ const toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 */
+    /*
   async function saveProduct() {
       const maxSize = 500 * 1024; // 500KB
 if (file1.size > maxSize || (file2 && file2.size > maxSize) || (file3 && file3.size > maxSize)) {
@@ -171,6 +172,62 @@ let description = document.getElementById("descInput").value;
     }
 }
 
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = error => reject(error);
+});
+*/
+    async function saveProduct() {
+    // 1. Pehle variables define karein
+    let f1 = document.getElementById("imageInput1").files[0];
+    let f2 = document.getElementById("imageInput2").files[0];
+    let f3 = document.getElementById("imageInput3").files[0];
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+    let description = document.getElementById("descInput").value;
+
+    // 2. Validation check karein
+    if(!f1 || !name || !price) return alert("Kam se kam Name, Price aur Pehli Image zaroori hai!");
+
+    const maxSize = 500 * 1024; // 500KB limit
+    if (f1.size > maxSize || (f2 && f2.size > maxSize) || (f3 && f3.size > maxSize)) {
+        return alert("Ek ya zyada images 500KB se badi hain. Kripya choti image use karein!");
+    }
+
+    let btn = document.getElementById("saveBtn");
+    btn.innerText = "Processing & Uploading... ⏳"; 
+    btn.disabled = true;
+
+    try {
+        let data = {
+            type: "product",
+            name: name,
+            price: price,
+            category: document.getElementById("categoryInput").value,
+            description: description,
+            image: await toBase64(f1),
+            image2: f2 ? await toBase64(f2) : null,
+            image3: f3 ? await toBase64(f3) : null
+        };
+
+        const response = await fetch(WEB_APP_URL, { 
+            method: "POST", 
+            body: JSON.stringify(data) 
+        });
+
+        alert("Zabardast! Product live ho gaya. ✅");
+        location.reload();
+
+    } catch (err) {
+        alert("Galti hui: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "SAVE & PUBLISH";
+    }
+}
+
+// Yeh function hona zaroori hai
 const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

@@ -197,6 +197,7 @@ function renderUI(data){
             <h4>${p.name}</h4>
             <div class="price">₹${p.price}</div>
             <button class="btn" onclick="orderNow('${p.name}','${p.price}')">ORDER NOW</button>
+              <button class="btn" style="width:40px; background:#25D366;" onclick="shareProduct('${p.name}','${p.price}')">🔗</button>
         </div>`;
     }).join('');
     document.getElementById("products").innerHTML = html;
@@ -447,6 +448,22 @@ function escapeHTML(str) {
 
 // Example usage while saving:
 // name: escapeHTML(document.getElementById("name").value)
+function shareProduct(name, price) {
+    const currentUrl = window.location.href;
+    const msg = `🚀 *Check this out on Shopyou Store!*\n\n*Product:* ${name}\n*Price:* ₹${price}\n\nDekhne ke liye niche click karein:\n${currentUrl}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: name,
+            text: msg,
+            url: currentUrl
+        }).catch(err => console.log(err));
+    } else {
+        // WhatsApp fallback
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+    }
+}
 
 </script>
     <div class="share-float" onclick="shareStore()">

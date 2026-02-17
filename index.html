@@ -65,6 +65,12 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
 }
 .scroll-dots { display: flex; justify-content: center; gap: 5px; margin-top: 5px; }
 .dot { width: 6px; height: 6px; background: #444; border-radius: 50%; }
+.blink-text {
+    animation: blinker 1.5s linear infinite;
+}
+@keyframes blinker {
+    50% { opacity: 0.3; }
+}
 
     </style>
 </head>
@@ -126,7 +132,7 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
     <div id="orderModal">
     <div class="modal-content">
     <h3 id="selNameText" style="color:var(--accent); text-align:center;">Order Details</h3>
-    
+    <input type="number" id="orderQty" class="form-input" value="1" min="1" oninput="calculateTotal()" placeholder="Quantity">
     <input type="text" id="custName" class="form-input" placeholder="Apna Poora Naam">
     <input type="tel" id="phone" class="form-input" placeholder="WhatsApp Number">
     <input type="email" id="custEmail" class="form-input" placeholder="Email ID (History ke liye)">
@@ -142,7 +148,10 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
         <input type="text" id="district" class="form-input" placeholder="District">
         <input type="text" id="state" class="form-input" placeholder="State">
     </div>
-
+<div id="totalBox" style="margin: 10px 0; padding: 10px; border: 2px solid #00a884; border-radius: 10px; background: #1c272e; text-align: center; display: none;">
+    <span style="color: #8696a0; font-size: 14px;">Total Amount: </span>
+    <span id="liveTotal" class="blink-text" style="color: #00a884; font-size: 20px; font-weight: bold;">₹0</span>
+</div>
     <button class="btn" onclick="submitOrder()">PLACE ORDER NOW</button>
     <button class="btn" onclick="closeModal()" style="background:#444; margin-top:5px;">CANCEL</button>
 </div>
@@ -460,6 +469,7 @@ window.onload = function() {
     } catch(e) { console.log("History load error"); }
 }
 */
+    /*
     async function openHistoryModal() {
     document.getElementById("historyModal").style.display = "block";
     const email = localStorage.getItem("userEmail");
@@ -483,7 +493,7 @@ window.onload = function() {
                 <p style="font-weight:bold; color:var(--accent);">Price: ₹${h.price}</p>
             </div>
         `).join('');
-        */
+        *
         // index.html ke andar openHistoryModal me map wala hissa aisa hona chahiye
 let html = orders.map(h => `
     <div style="background:#2a3942; padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--accent); text-align:left;">
@@ -500,7 +510,69 @@ let html = orders.map(h => `
         listDiv.innerHTML = "<p>Error: Data load nahi ho paya.</p>";
     }
 }
+*/
+async function openHistoryModal() {
+    document.getElementById("historyModal").style.display = "block";
+    const email = localStorage.getItem("userEmail");
+    const listDiv = document.getElementById("historyList");
+    
+    listDiv.innerHTML = "<p>Orders dhund rahe hain... 🔍</p>";
 
+    try {
+        const resp = await fetch(WEB_APP_URL + "?type=history&email=" + email);
+        const orders = await resp.json();
+
+        if (orders.length === 0) {
+            listDiv.innerHTML = "<p>Abhi tak koi order nahi mila.</p>";
+            return;
+        }
+
+        let html = orders.map(h => {
+            // 24 Hours Logic
+            // Note: Date format "dd MMM yyyy" ko JavaScript Date object me convert karna
+            const orderDate = new Date(h.date);
+            const now = new Date();
+            const timeDiff = Math.abs(now - orderDate);
+            const diffHours = timeDiff / (1000 * 60 * 60);
+
+            // Cancel Button sirf tab dikhega jab order 24 ghante se purana na ho
+            let cancelBtnHTML = "";
+            if (diffHours <= 24) {
+                cancelBtnHTML = `
+                <button onclick="contactForCancel('${h.productName}', '${h.date}')" 
+                        style="margin-top:10px; background:#ff4b2b; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; font-weight:bold; cursor:pointer; width:100%;">
+                    CANCEL / EDIT ORDER ❌
+                </button>`;
+            } else {
+                cancelBtnHTML = `<p style="font-size:10px; color:#ef5350; margin-top:10px; text-align:center;">Editing time expired (24h limit)</p>`;
+            }
+
+            return `
+            <div style="background:#2a3942; padding:15px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--accent); text-align:left;">
+                <h4 style="margin:0; color:white;">${h.productName || 'No Name'}</h4>
+                <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                    <span style="color:var(--accent); font-weight:bold;">₹${h.price || '0'}</span>
+                    <span style="font-size:12px; color:#8696a0;">${h.date || 'No Date'}</span>
+                </div>
+                <p style="font-size:12px; color:#8696a0; margin:5px 0 0 0;">Quantity: ${h.qty || '1'}</p>
+                ${cancelBtnHTML}
+            </div>`;
+        }).join('');
+
+        listDiv.innerHTML = html;
+    } catch (e) {
+        listDiv.innerHTML = "<p>Error: Data load nahi ho paya.</p>";
+    }
+}
+
+// WhatsApp par Cancel/Edit Request bhejne ka function
+function contactForCancel(pName, pDate) {
+    const adminWhatsApp = "91XXXXXXXXXX"; // <--- Apna WhatsApp Number yahan dalein
+    const msg = `Hello Admin, mujhe apna order Cancel/Edit karwana hai.\n\nProduct: ${pName}\nOrder Date: ${pDate}\nEmail: ${localStorage.getItem("userEmail")}`;
+    window.open(`https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+    
 function closeHistory() {
     document.getElementById("historyModal").style.display = "none";
 }
@@ -551,6 +623,18 @@ function escapeHTML(str) {
     } else {
         const waUrl = `https://wa.me/?text=${encodeURIComponent(msg + " " + currentUrl)}`;
         window.open(waUrl, '_blank');
+    }
+}
+function calculateTotal() {
+    let qty = document.getElementById("orderQty").value;
+    let total = qty * selPrice; // selPrice humne orderNow() me save kiya tha
+    
+    let box = document.getElementById("totalBox");
+    if (qty > 1) {
+        box.style.display = "block";
+        document.getElementById("liveTotal").innerText = "₹" + total;
+    } else {
+        box.style.display = "none";
     }
 }
 

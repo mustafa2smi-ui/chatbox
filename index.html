@@ -110,6 +110,7 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
 </div>
 
 <div id="products">Loading store...</div>
+    <button id="loadMoreBtn" class="btn" style="margin:20px auto; display:none;" onclick="loadMore()">Load More Products</button>
 <!--
 <div id="orderModal">
   <div class="modal-content">
@@ -159,7 +160,9 @@ footer { background: #121b22; padding: 30px 15px; text-align: center; border-top
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwi53A23bVMYTVWxlR3pQ_DroUbJs03tgc7fuX0OdpExuC01dQe2oMnF2s09tkQ1IxsSA/exec";
 let allData = [];
 let selName = "", selPrice = "";
-
+let currentPage = 1;
+const itemsPerPage = 6;
+    
 function loadProducts(){
   fetch(WEB_APP_URL).then(res => res.json()).then(data => {
     allData = data;
@@ -179,6 +182,7 @@ function renderUI(data){
     document.getElementById("products").innerHTML = html || "<h3>No Items Found</h3>";
 }
 */
+    /*
     function renderUI(data) {
     let html = data.map(p => {
         // Sirf wahi images dikhayenge jo empty nahi hain
@@ -201,6 +205,62 @@ function renderUI(data){
         </div>`;
     }).join('');
     document.getElementById("products").innerHTML = html;
+}
+*/
+    
+
+function renderUI(data, append = false) {
+    const container = document.getElementById("products");
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedData = data.slice(start, end);
+
+    let html = paginatedData.map(p => {
+        // 3 Images Slider Logic
+        let imagesHTML = `<img src="${p.image}" loading="lazy">`;
+        if(p.image2) imagesHTML += `<img src="${p.image2}" loading="lazy">`;
+        if(p.image3) imagesHTML += `<img src="${p.image3}" loading="lazy">`;
+
+        return `
+        <div class="card">
+            <div class="image-container">
+                ${imagesHTML}
+            </div>
+            <div class="scroll-dots">
+                <div class="dot"></div>
+                ${p.image2 ? '<div class="dot"></div>' : ''}
+                ${p.image3 ? '<div class="dot"></div>' : ''}
+            </div>
+            <div style="padding:10px;">
+                <h4 style="margin:5px 0;">${p.name}</h4>
+                <p style="font-size:12px; color:#8696a0; height:35px; overflow:hidden;">${p.description || ''}</p>
+                <div class="price">₹${p.price}</div>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button class="btn" onclick="orderNow('${p.name}','${p.price}')">ORDER</button>
+                    <button class="btn" style="width:50px; background:#25D366;" onclick="shareProduct('${p.name}','${p.price}')">🔗</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    if (append) {
+        container.innerHTML += html;
+    } else {
+        container.innerHTML = html || "<h3>No Items Found</h3>";
+    }
+
+    // Load More Button Visibility
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (data.length > end) {
+        loadMoreBtn.style.display = "block";
+    } else {
+        loadMoreBtn.style.display = "none";
+    }
+}
+
+function loadMore() {
+    currentPage++;
+    renderUI(allData, true);
 }
 
 function filterCat(cat, el){
@@ -448,7 +508,8 @@ function escapeHTML(str) {
 
 // Example usage while saving:
 // name: escapeHTML(document.getElementById("name").value)
-function shareProduct(name, price) {
+/*
+    function shareProduct(name, price) {
     const currentUrl = window.location.href;
     const msg = `🚀 *Check this out on Shopyou Store!*\n\n*Product:* ${name}\n*Price:* ₹${price}\n\nDekhne ke liye niche click karein:\n${currentUrl}`;
     
@@ -461,6 +522,22 @@ function shareProduct(name, price) {
     } else {
         // WhatsApp fallback
         const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+    }
+}
+*/
+    function shareProduct(name, price) {
+    const currentUrl = window.location.href;
+    const msg = `🚀 *Check this out on Shopyou Store!*\n\n*Product:* ${name}\n*Price:* ₹${price}\n\nVisit karein:`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: name,
+            text: msg,
+            url: currentUrl // Browser yahan khud link jodd dega
+        }).catch(err => console.log(err));
+    } else {
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(msg + " " + currentUrl)}`;
         window.open(waUrl, '_blank');
     }
 }
